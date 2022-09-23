@@ -5,9 +5,84 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const handleResponse = async (response, parseResponse) => {
+      const content = document.querySelector('#content');
+
+      switch (response.status) {
+        case 200:
+          content.innerHTML = '<b>Success</b>';
+          break;
+        case 201:
+          content.innerHTML = '<b>Created</b>';
+          break;
+        case 204:
+          content.innerHTML = '<b>Updated (No Content)</b>';
+          return;
+        case 400:
+          content.innerHTML = '<b>Bad Request</b>';
+          break;
+        default:
+          content.innerHTML = '<b>Not Found</b>';
+          break;
+      }
+
+      const obj = await response.json();
+      if (obj.users) {
+        content.innerHTML += `<p>${JSON.stringify(obj.users)}</p>`;
+      } else if (obj.message) {
+        content.innerHTML += `<p>Message: ${obj.message}</p>`;
+      } 
+    };
+
+    const sendPost = async (nameForm) => {
+      const url = nameForm.getAttribute('action');
+      const method = nameForm.getAttribute('method');
+
+      const name = nameForm.querySelector('#nameField').value;
+      const age = nameForm.querySelector('#ageField').value;
+
+      const formData = `name=${name}&age=${age}`;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      });
+
+      handleResponse(response, method);
+    };
+
+    const requestUpdate = async (userForm) => {
+      const url = userForm.querySelector('#urlField').value;
+      const method = userForm.querySelector('#methodSelect').value;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      handleResponse(response, method);
+    };
+
     const init = () => {
       const nameForm = document.querySelector('#nameForm');
       const userForm = document.querySelector('#userForm');
+
+      nameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      });
+      userForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        requestUpdate(userForm);
+        return false;
+      });
     };
 
     window.onload = init;
